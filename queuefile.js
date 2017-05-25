@@ -27,8 +27,8 @@ class QueueFile {
 		var buff = Buffer.alloc(this.bsize+BPAD);
 		do {
 			fs.readSync(this.fd,buff,0,buff.length,this.rpos);
-			this.rpos += buff.length+1;
-			str += buff.toString("utf-8",0,buff.length-2);
+			this.rpos += buff.length;
+			str += buff.toString("utf8",0,buff.length-1);
 			next = buff.readUInt8(buff.length-1);
 		}while(next);
 
