@@ -1,0 +1,21 @@
+{
+  "name": "fileq",
+  "version": "0.0.1",
+  "description": "File based FIFO queue",
+  "author": "David Gómez Matarrodona <solzimer@gmail.com>",
+  "url": "https://github.com/owner/project/issues",
+  "email": "solzimer@gmail.com",
+  "main": "main.js",
+  "license": "MIT",
+  "repository": "solzimer/fileq",
+  "keywords": [
+    "file",
+    "buffer",
+    "json",
+    "queue",
+    "FIFO"
+  ],
+  "dependencies": {
+    "mkdirp": "^0.5.1"
+  }
+}
