@@ -3,7 +3,7 @@ var file=null, i=0;
 
 function writeEntry() {
 		var json = {
-			message : "This is the entry number "+i,
+			message : "This is the entry number "+i+ " of the file",
 			entry : i
 		}
 		file.write(json,(err,res)=>{
@@ -12,7 +12,7 @@ function writeEntry() {
 		});
 }
 
-QueueFile.create("test.tmp",100,(err,f)=>{
+QueueFile.create("test.tmp",100,40,(err,f)=>{
 	file = f;
 	writeEntry();
 });

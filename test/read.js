@@ -3,7 +3,7 @@ var file=null, i=0;
 
 function readEntry() {
 		file.read(i,(err,res)=>{
-			console.log(res);
+			console.log("***** "+res+ " *****");
 			if(++i<100) readEntry();
 			else file.close();
 		});

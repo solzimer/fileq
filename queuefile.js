@@ -2,16 +2,16 @@ const	fs = require("fs");
 const MAX = 65535;
 const voidfn = ()=>{};
 
-const HLEN = 4;	// max:uint16, curr:uint16
-const PLEN = 6	// pos:uint32, size:uint16
+const HLEN = 6;	// max:uint16, wcurr:uint16
+const BPAD = 1;	// Next byte number
 
 class QueueFile {
-	constructor(fd,max,curr) {
+	constructor(fd,max,bsize) {
 		this.fd = fd;			// File Descriptor
-		this.max = max;		// Max allowed entries
-		this.curr = curr;	// Current entry
-		this.csize = 0;		// Current entry size
-		this.cpos = HLEN+PLEN*max+1;	// Current entry position
+		this.max = max;		// Max allowed blocks
+		this.bsize = bsize	// Block size
+		this.wpos = HLEN+1;	// Current write position
+		this.rpos = HLEN+1;	// Current read position
 
 		console.log(this);
 	}
@@ -20,50 +20,80 @@ class QueueFile {
 		fs.close(this.fd,callback);
 	}
 
-	read(idx,callback) {
+	read(callback) {
 		callback = callback || voidfn;
-		var fd = this.fd;
-		var buff = Buffer.alloc(PLEN); // 4 pos, 2 size
-		fs.read(fd,buff,0,PLEN,HLEN+idx*PLEN+1,err=>{
-			var fidx = buff.readUInt32BE(0);
-			var size = buff.readUInt16BE(4);
-			var obuff = Buffer.alloc(size);
-			fs.read(fd,obuff,0,size,fidx,err=>{
-				var json = obuff.toString();
-				callback(null,json);
-			});
-		});
+
+		var str = "", next = false;
+		var buff = Buffer.alloc(this.bsize+BPAD);
+		do {
+			fs.readSync(this.fd,buff,0,buff.length,this.rpos);
+			this.rpos += buff.length+1;
+			str += buff.toString("utf-8",0,buff.length-2);
+			next = buff.readUInt8(buff.length-1);
+		}while(next);
+
+		console.log("READ => ",str);
+
+		process.nextTick(()=>{
+			callback(null,str);
+		})
 	}
 
 	write(json,callback) {
 		callback = callback || voidfn;
+		var str = JSON.stringify(json);
+		var len = str.length;
+		var blocks = Math.ceil(len/this.bsize);
+
+		var buffers = [];
+		for(var i=0;i<blocks;i++) {
+			var buff = Buffer.alloc(this.bsize+BPAD);
+			buff.write(str.substring(i*this.bsize,(i+1)*this.bsize))
+			buff.writeUInt8(i<blocks-1?1:0,buff.length-1);
+			buffers.push(buff);
+		}
+
+		buffers.forEach(buff=>{
+			fs.writeSync(this.fd,buff,0,buff.length,this.wpos);
+			this.wpos += this.bsize + 1;
+		});
+
+		/*
+		var jbuff = Buffer.from(JSON.stringify(json));
+		var nbuff = Buffer.alloc(PLEN); // 4 pos, 2 size
+
 		var fd = this.fd;
 		var curr = this.curr;
-		var nidx = this.cpos+this.csize;
-		var jbuff = Buffer.from(JSON.stringify(json));
+		var cpos = this.cpos;
+		var csize = jbuff.length
+		var hpos = HLEN+PLEN*curr;
 
-		var nbuff = Buffer.alloc(PLEN); // 4 pos, 2 size
-		nbuff.writeUInt32BE(nidx,0);
-		nbuff.writeUInt16BE(jbuff.length,4);
+		nbuff.writeUInt32BE(cpos,0);
+		nbuff.writeUInt16BE(csize,4);
 
-		fs.write(fd,jbuff,0,jbuff.length,this.cpos,err=>{
-			this.cpos += jbuff.length+1;
-			fs.write(fd,nbuff,0,nbuff.length,HLEN+PLEN*curr+1,err=>{
+		fs.write(fd,nbuff,0,nbuff.length,hpos+1,err=>{
+			fs.write(fd,jbuff,0,jbuff.length,cpos+1,err=>{
+				this.cpos += jbuff.length;
 				this.curr++;
-				this.csize = jbuff.length;
 				callback();
 			});
 		});
+		*/
+
+		process.nextTick(()=>{
+			callback();
+		});
 	}
 
-	static create(path,max,callback) {
+	static create(path,max,bsize,callback) {
 		callback = callback || voidfn;
 		var fd = fs.open(path, "w+", (err,fd)=>{
 			max = Math.min(MAX,Math.max(0,max));
-			var buffer = Buffer.alloc(HLEN+max*PLEN); // 2 int16 + max * (int32+int16)
+			var buffer = Buffer.alloc(HLEN); // 2 int16 + max * (int32+int16)
 			buffer.writeUInt16BE(max,0);
-			fs.write(fd,buffer,0,HLEN+max*PLEN,0,err=>{
-				callback(err,new QueueFile(fd,max,0));
+			buffer.writeUInt16BE(bsize,2);
+			fs.write(fd,buffer,0,HLEN,0,err=>{
+				callback(err,new QueueFile(fd,max,bsize));
 			});
 		});
 	}
@@ -74,8 +104,8 @@ class QueueFile {
 			var buffer = Buffer.alloc(HLEN);
 			fs.read(fd,buffer,0,HLEN,0,err=>{
 				var max = buffer.readUInt16BE(0);
-				var curr = buffer.readUInt16BE(2);
-				callback(err,new QueueFile(fd,max,curr));
+				var bsize = buffer.readUInt16BE(2);
+				callback(err,new QueueFile(fd,max,bsize));
 			});
 		});
 	}
