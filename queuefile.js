@@ -58,28 +58,6 @@ class QueueFile {
 			this.wpos += this.bsize + 1;
 		});
 
-		/*
-		var jbuff = Buffer.from(JSON.stringify(json));
-		var nbuff = Buffer.alloc(PLEN); // 4 pos, 2 size
-
-		var fd = this.fd;
-		var curr = this.curr;
-		var cpos = this.cpos;
-		var csize = jbuff.length
-		var hpos = HLEN+PLEN*curr;
-
-		nbuff.writeUInt32BE(cpos,0);
-		nbuff.writeUInt16BE(csize,4);
-
-		fs.write(fd,nbuff,0,nbuff.length,hpos+1,err=>{
-			fs.write(fd,jbuff,0,jbuff.length,cpos+1,err=>{
-				this.cpos += jbuff.length;
-				this.curr++;
-				callback();
-			});
-		});
-		*/
-
 		process.nextTick(()=>{
 			callback();
 		});
