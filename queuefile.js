@@ -9,6 +9,7 @@ class QueueFile {
 	constructor(fd,max,bsize) {
 		this.fd = fd;			// File Descriptor
 		this.max = max;		// Max allowed blocks
+		this.count = 0;
 		this.bsize = bsize	// Block size
 		this.wpos = HLEN+1;	// Current write position
 		this.rpos = HLEN+1;	// Current read position
@@ -58,6 +59,7 @@ class QueueFile {
 			this.wpos += this.bsize + 1;
 		});
 
+		this.count++;
 		process.nextTick(()=>{
 			callback();
 		});
@@ -65,13 +67,17 @@ class QueueFile {
 
 	static create(path,max,bsize,callback) {
 		callback = callback || voidfn;
-		var fd = fs.open(path, "w+", (err,fd)=>{
-			max = Math.min(MAX,Math.max(0,max));
-			var buffer = Buffer.alloc(HLEN); // 2 int16 + max * (int32+int16)
-			buffer.writeUInt16BE(max,0);
-			buffer.writeUInt16BE(bsize,2);
-			fs.write(fd,buffer,0,HLEN,0,err=>{
-				callback(err,new QueueFile(fd,max,bsize));
+		return new Promise((resolve,reject)=>{
+			var fd = fs.open(path, "w+", (err,fd)=>{
+				max = Math.min(MAX,Math.max(0,max));
+				var buffer = Buffer.alloc(HLEN); // 2 int16 + max * (int32+int16)
+				buffer.writeUInt16BE(max,0);
+				buffer.writeUInt16BE(bsize,2);
+				fs.write(fd,buffer,0,HLEN,0,err=>{
+					var q = new QueueFile(fd,max,bsize);
+					callback(err,q);
+					resolve(q);
+				});
 			});
 		});
 	}

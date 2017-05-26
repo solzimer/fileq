@@ -69,15 +69,24 @@ class Queue {
 		this.ready = FileManager.
 			initPath(this.path).
 			then(()=>FileManager.newFile(this.path)).
-			then(fd=>this.wfile=new QueueFile(fd,100,100)).
+			then(fd=>this.writer=new QueueFile(fd,100,100)).
 			then(()=>FileManager.listFiles(this.path)).
-			then(files=>this.files=files,err=>console.error(err));
+			then(files=>this.files=files);
 	}
 
 	push(item, callback) {
 		this.ready.then(()=>{
-			console.log("PUSHED!");
-			console.log(this);
+			var queue = this.writer;
+			if(queue.count<queue.max) {
+				queue.write(item,callback);
+			}
+			else {
+				FileManager.newFile(this.path).
+				then(fd=>this.writer=new QueueFile(fd,100,100)).
+				then(()=>FileManager.listFiles(this.path)).
+				then(files=>this.files=files).
+				then(()=>this.push(item,callback));
+			}
 		});
 	}
 
