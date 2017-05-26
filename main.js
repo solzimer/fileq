@@ -50,10 +50,7 @@ class FileManager {
 		callback = callback || voidfn;
 		return new Promise((resolve,reject)=>{
 			var d = Date.now();
-			fs.open(path+"/"+d+".fbq", "w+", (err,fd)=>{
-				if(err) {reject(err);	callback(err,null);}
-				else {resolve(fd);callback(null,fd);}
-			});
+			resolve(path+"/"+d+".fbq");
 		});
 	}
 }
@@ -69,7 +66,8 @@ class Queue {
 		this.ready = FileManager.
 			initPath(this.path).
 			then(()=>FileManager.newFile(this.path)).
-			then(fd=>this.writer=new QueueFile(fd,100,100)).
+			then(fname=>QueueFile.create(fname,100,100)).
+			then(queue=>this.writer=queue).
 			then(()=>FileManager.listFiles(this.path)).
 			then(files=>this.files=files);
 	}
@@ -81,11 +79,14 @@ class Queue {
 				queue.write(item,callback);
 			}
 			else {
-				FileManager.newFile(this.path).
-				then(fd=>this.writer=new QueueFile(fd,100,100)).
-				then(()=>FileManager.listFiles(this.path)).
-				then(files=>this.files=files).
-				then(()=>this.push(item,callback));
+				queue.close(()=>{
+					FileManager.newFile(this.path).
+					then(fname=>QueueFile.create(fname,100,100)).
+					then(queue=>this.writer=queue).
+					then(()=>FileManager.listFiles(this.path)).
+					then(files=>this.files=files).
+					then(()=>this.push(item,callback));
+				});
 			}
 		});
 	}
