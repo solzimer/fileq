@@ -3,74 +3,81 @@ const
 	mkdirp = require('mkdirp'),
 	QueueFile = require("./queuefile.js");
 
-const DEF_CONF =  {path : "/tmp/fileq"};
 const voidfn = ()=>{};
+const DEF_CONF =  {
+	path : "/tmp/fileq",
+	max : 100,
+	bsize : 100
+};
 
-function getFiles(path,size,callback) {
-	callback = callback || voidfn;
-	return new Promise((resolve,reject)=>{
-		mkdirp(path,err=>{
-			if(err) {
-				reject(err);
-				callback(err);
-			}
-			else {
-				fs.readdir(path, (err,res)=>{
-					if(err) {
-						reject(err);
-						callback(err);
-					}
-					else {
-						res.sort((a,b)=>a-b);
-						resolve(res);
-						callback(null,res);
-					}
-				});
-			}
+var map = {};
+
+class FileManager {
+	static initPath(path,size,callback) {
+		callback = callback || voidfn;
+		return new Promise((resolve,reject)=>{
+			mkdirp(path,err=>{
+				if(err) {
+					reject(err);
+					callback(err);
+				}
+				else {
+					resolve();
+					callback();
+				}
+			});
 		});
-	});
+	}
+
+	static listFiles(path, callback) {
+		callback = callback || voidfn;
+		return new Promise((resolve,reject)=>{
+			fs.readdir(path, (err,res)=>{
+				if(err) {
+					reject(err);
+					callback(err);
+				}
+				else {
+					res.sort((a,b)=>a-b);
+					resolve(res);
+					callback(null,res);
+				}
+			});
+		});
+	}
+
+	static newFile(path, callback) {
+		callback = callback || voidfn;
+		return new Promise((resolve,reject)=>{
+			var d = Date.now();
+			fs.open(path+"/"+d+".fbq", "w+", (err,fd)=>{
+				if(err) {reject(err);	callback(err,null);}
+				else {resolve(fd);callback(null,fd);}
+			});
+		});
+	}
 }
 
-function newFile(path,callback) {
-	callback = callback || voidfn;
-	return new Promise((resolve,reject)=>{
-		var d = Date.now();
-		fs.open(path+"/"+d+".fbq", "w+", (err,fd)=>{
-			if(err) {
-				reject(err);
-				callback(err,null);
-			}
-			else {
-				resolve(fd);
-				callback(null,fd);
-			}
-		});
-	});
-}
 
 class Queue {
 	constructor(path) {
 		this.path = path || DEF_CONF.path;
 		this.files = [];
-		this.ready = this.init(this.path);
+		this.writer = null;
+		this.reader = null;
 
-		this.ready.then(
-			files=>this.files=files,
-			err=>console.error(err)
-		);
-	}
-
-	init(path) {
-		return getFiles(path);
+		this.ready = FileManager.
+			initPath(this.path).
+			then(()=>FileManager.newFile(this.path)).
+			then(fd=>this.wfile=new QueueFile(fd,100,100)).
+			then(()=>FileManager.listFiles(this.path)).
+			then(files=>this.files=files,err=>console.error(err));
 	}
 
 	push(item, callback) {
-		var pr = this.wfile?
-			Promise.resolve() :
-			newFile(this.path).then(file=>this.wfile=file);
-
-		pr.then(res=>{
-			fs.read()
+		this.ready.then(()=>{
+			console.log("PUSHED!");
+			console.log(this);
 		});
 	}
 
@@ -79,4 +86,9 @@ class Queue {
 	}
 }
 
-module.exports = Queue;
+module.exports = {
+	from : function(path) {
+		map[path] = map[path] || new Queue(path);
+		return map[path];
+	}
+};
