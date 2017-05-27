@@ -12,7 +12,7 @@ function writeEntry() {
 		});
 }
 
-QueueFile.create("test.tmp",100,40,(err,f)=>{
+QueueFile.create("db/test.tmp",100,40,(err,f)=>{
 	file = f;
 	writeEntry();
 });

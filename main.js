@@ -57,16 +57,19 @@ class FileManager {
 
 
 class Queue {
-	constructor(path) {
+	constructor(path,options) {
+		options = options || {};
 		this.path = path || DEF_CONF.path;
 		this.files = [];
 		this.writer = null;
 		this.reader = null;
+		this.max = options.max || 100;
+		this.bsize = options.bsize || 100;
 
 		this.ready = FileManager.
 			initPath(this.path).
 			then(()=>FileManager.newFile(this.path)).
-			then(fname=>QueueFile.create(fname,100,100)).
+			then(fname=>QueueFile.create(fname,this.max,this.bsize)).
 			then(queue=>this.writer=queue).
 			then(()=>FileManager.listFiles(this.path)).
 			then(files=>this.files=files);
@@ -81,7 +84,7 @@ class Queue {
 			else {
 				queue.close(()=>{
 					FileManager.newFile(this.path).
-					then(fname=>QueueFile.create(fname,100,100)).
+					then(fname=>QueueFile.create(fname,this.max,this.bsize)).
 					then(queue=>this.writer=queue).
 					then(()=>FileManager.listFiles(this.path)).
 					then(files=>this.files=files).
@@ -97,8 +100,8 @@ class Queue {
 }
 
 module.exports = {
-	from : function(path) {
-		map[path] = map[path] || new Queue(path);
+	from : function(path,options) {
+		map[path] = map[path] || new Queue(path,options);
 		return map[path];
 	}
 };
