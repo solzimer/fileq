@@ -1,7 +1,7 @@
 const Queue = require("../main.js");
 
 const IWRITE = 100;
-const IREAD = 100;
+const IREAD = 10;
 
 var queue = Queue.from("./db",{max:10,bsize:100});
 var i = 0;

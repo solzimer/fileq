@@ -74,6 +74,17 @@ class QueueFile {
 		}
 	}
 
+	skip(n,i) {
+		this.rpos += n*(this.bsize+BPAD);
+		this.rcount += i||1;
+	}
+
+	test(json) {
+		var str = JSON.stringify(json);
+		var len = str.length;
+		return Math.ceil(len/this.bsize);
+	}
+
 	read(callback) {
 		callback = callback || voidfn;
 

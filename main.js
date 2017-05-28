@@ -8,11 +8,14 @@ const
 const DEF_CONF =  {
 	path : "/tmp/fileq",
 	max : 100,
-	bsize : 100
+	bsize : 100,
+	csize : 100
 };
 
 var map = {};
-var cachemap = {}, cache = [];
+var cache = {
+	"*" : {map : {}, list : []}
+};
 
 class Queue extends EventEmitter {
 	constructor(path,options) {
@@ -55,10 +58,38 @@ class Queue extends EventEmitter {
 		});
 	}
 
+	_cache(item) {
+		var c = cache["*"], map = c.map, list = c.list;
+		var qf = item? this.writer : this.reader;
+
+		if(item) {
+			var k = qf.path+"_"+(qf.wcount+1);
+			var data = {key:k,item:item,blocks:qf.test(item)}
+			map[k] = data
+			list.push(data);
+			if(list.length>=DEF_CONF.csize) {
+				var ritem = list.shift();
+				delete map[ritem.key];
+			}
+		}
+		else {
+			var k = qf.path+"_"+(qf.rcount+1);
+			if(map[k]) {
+				var data = map[k];
+				qf.skip(data.blocks);
+				return data;
+			}
+			else {
+				return {err:"NO_CACHE"}
+			}
+		}
+	}
+
 	_push(item, callback, newfile) {
 		this.ready.then(()=>{
 			var queue = this.writer;
 			if(queue.wcount<queue.max) {
+				this._cache(item);
 				queue.write(item,err=>{
 					this.emit("data",newfile);
 					callback(err);
@@ -86,6 +117,13 @@ class Queue extends EventEmitter {
 
 			// If we have a reference
 			if(queue) {
+				var cdata = this._cache();
+
+				if(!cdata.err) {
+					callback(null,cdata);
+					return;
+				}
+
 				queue.read().then(
 					data=>callback(null,data),
 					err=>{
