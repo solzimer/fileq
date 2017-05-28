@@ -1,18 +1,28 @@
 const Queue = require("../main.js");
 
-var queue = Queue.from("./db",1000,100);
+const IWRITE = 1000;
+const IREAD = 10;
+
+var queue = Queue.from("./db",{max:10,bsize:100});
 var i = 0;
 
-var fn = function() {
+var write = function() {
 	var json = {
 		message : "This is the entry number "+i+ " of the file",
 		entry : i++
 	}
 
 	queue.push(json,()=>{
-		//console.log(`Writen ${i}`);
-		if(i<10000) setImmediate(fn);
+		setTimeout(write,IWRITE);
 	});
 }
 
-fn();
+var read = function() {
+	queue.peek((err,json)=>{
+		console.log("READ => ",err||json);
+		setTimeout(read,IREAD);
+	});
+}
+
+setTimeout(write,IWRITE);
+setTimeout(read,IREAD);

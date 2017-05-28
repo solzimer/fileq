@@ -6,10 +6,12 @@ const HLEN = 6;	// max:uint16, wcurr:uint16
 const BPAD = 1;	// Next byte number
 
 class QueueFile {
-	constructor(fd,max,bsize) {
+	constructor(path,fd,max,bsize) {
+		this.path = path;
 		this.fd = fd;			// File Descriptor
 		this.max = max;		// Max allowed blocks
-		this.count = 0;
+		this.wcount = 0;
+		this.rcount = 0;
 		this.bsize = bsize	// Block size
 		this.wpos = HLEN+1;	// Current write position
 		this.rpos = HLEN+1;	// Current read position
@@ -31,15 +33,16 @@ class QueueFile {
 			});
 		}
 		else {
-			this.count++;
+			this.wcount++;
 			callback();
 		}
 	}
 
 	_bread(buffer,callback) {
 		// Read block
-		fs.read(this.fd,buffer,0,buffer.length,this.rpos,err=>{
-			if(err) callback(err);
+		fs.read(this.fd,buffer,0,buffer.length,this.rpos,(err,bytes)=>{
+			if(!bytes) callback(QueueFile.NO_DATA);
+			else if(err) callback(err);
 			else {
 				this.rpos += buffer.length;
 				// Get content and "next" flag
@@ -60,8 +63,15 @@ class QueueFile {
 		});
 	}
 
-	close(callback) {
-		fs.close(this.fd,callback);
+	close(del,callback) {
+		if(typeof(del)=="boolean") {
+			fs.close(this.fd,()=>{
+				fs.unlink(this.path,callback);
+			});
+		}
+		else {
+			fs.close(this.fd,del);
+		}
 	}
 
 	read(callback) {
@@ -72,6 +82,7 @@ class QueueFile {
 
 		return new Promise((resolve,reject)=>{
 			this._bread(buffer,(err,res)=>{
+				this.rcount += err? 0 : 1;
 				if(res) res = res.trim();
 				if(!err) resolve(res);
 				else reject(err);
@@ -113,7 +124,7 @@ class QueueFile {
 
 		return new Promise((resolve,reject)=>{
 			// Create/Truncate file
-			var fd = fs.open(path, "w+", (err,fd)=>{
+			fs.open(path, "w+", (err,fd)=>{
 				// Pre-allocate all data, so we are sure we can
 				// write at least on this file
 				var buffer = Buffer.alloc(HLEN+max*bsize);
@@ -125,7 +136,7 @@ class QueueFile {
 						reject(err);
 					}
 					else {
-						var q = new QueueFile(fd,max,bsize);
+						var q = new QueueFile(path,fd,max,bsize);
 						callback(null,q);
 						resolve(q);
 					}
@@ -136,15 +147,27 @@ class QueueFile {
 
 	static open(path,callback)  {
 		callback = callback || voidfn;
-		var fd = fs.open(path, "r", (err,fd)=>{
-			var buffer = Buffer.alloc(HLEN);
-			fs.read(fd,buffer,0,HLEN,0,err=>{
-				var max = buffer.readUInt16BE(0);
-				var bsize = buffer.readUInt16BE(2);
-				callback(err,new QueueFile(fd,max,bsize));
+		return new Promise((resolve,reject)=>{
+			fs.open(path, "r", (err,fd)=>{
+				var buffer = Buffer.alloc(HLEN);
+				fs.read(fd,buffer,0,HLEN,0,err=>{
+					if(err) {
+						callback(err);
+						reject(err);
+					}
+					else {
+						var max = buffer.readUInt16BE(0);
+						var bsize = buffer.readUInt16BE(2);
+						var q = new QueueFile(path,fd,max,bsize);
+						callback(null,q);
+						resolve(q);
+					}
+				});
 			});
 		});
 	}
 }
+
+QueueFile.NO_DATA = "NO_DATA";
 
 module.exports = QueueFile;
