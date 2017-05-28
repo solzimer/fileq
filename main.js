@@ -2,6 +2,7 @@ const
 	fs = require("fs"),
 	mkdirp = require('mkdirp'),
 	EventEmitter = require('events'),
+	semaphore = require('semaphore'),
 	QueueFile = require("./queuefile.js");
 
 const voidfn = ()=>{};
@@ -68,6 +69,8 @@ class Queue extends EventEmitter {
 		this.reader = null;
 		this.max = options.max || 100;
 		this.bsize = options.bsize || 100;
+		this.wsem = semaphore(1);
+		this.rsem = semaphore(1);
 
 		this.ready = FileManager.
 			initPath(this.path).
@@ -78,7 +81,25 @@ class Queue extends EventEmitter {
 			then(files=>this.files=files);
 	}
 
-	push(item, callback, newfile) {
+	push(item, callback) {
+		this.wsem.take(()=>{
+			this._push(item,(err,res)=>{
+				callback(err,res);
+				this.wsem.leave();
+			});
+		});
+	}
+
+	peek(callback, timeout) {
+		this.rsem.take(()=>{
+			this._peek((err,res)=>{
+				callback(err,res);
+				this.rsem.leave();
+			},timeout);
+		});
+	}
+
+	_push(item, callback, newfile) {
 		this.ready.then(()=>{
 			var queue = this.writer;
 			if(queue.wcount<queue.max) {
@@ -94,14 +115,14 @@ class Queue extends EventEmitter {
 					then(queue=>this.writer=queue).
 					then(()=>FileManager.listFiles(this.path)).
 					then(files=>this.files=files).
-					then(()=>this.push(item,callback,true));
+					then(()=>this._push(item,callback,true));
 				});
 			}
 		});
 	}
 
-	peek(callback, timeout) {
-		var retry = ()=>this.peek(callback,timeout);
+	_peek(callback, timeout) {
+		var retry = ()=>this._peek(callback,timeout);
 
 		// Wait for ready
 		this.ready.then(()=>{
@@ -138,8 +159,7 @@ class Queue extends EventEmitter {
 			else {
 				if(this.files.length) {
 					QueueFile.open(this.path+"/"+this.files.pop()).
-					then(q=>this.reader=q).
-					then(retry);
+					then(q=>{this.reader=q;retry()},retry);
 				}
 				else {
 					this.once("data",retry);

@@ -16,7 +16,7 @@ class QueueFile {
 		this.wpos = HLEN+1;	// Current write position
 		this.rpos = HLEN+1;	// Current read position
 
-		console.log(this);
+		//console.log(this);
 	}
 
 	_bwrite(buffers,callback) {
@@ -149,20 +149,26 @@ class QueueFile {
 		callback = callback || voidfn;
 		return new Promise((resolve,reject)=>{
 			fs.open(path, "r", (err,fd)=>{
-				var buffer = Buffer.alloc(HLEN);
-				fs.read(fd,buffer,0,HLEN,0,err=>{
-					if(err) {
-						callback(err);
-						reject(err);
-					}
-					else {
-						var max = buffer.readUInt16BE(0);
-						var bsize = buffer.readUInt16BE(2);
-						var q = new QueueFile(path,fd,max,bsize);
-						callback(null,q);
-						resolve(q);
-					}
-				});
+				if(err) {
+					callback(err);
+					reject(err);
+				}
+				else {
+					var buffer = Buffer.alloc(HLEN);
+					fs.read(fd,buffer,0,HLEN,0,err=>{
+						if(err) {
+							callback(err);
+							reject(err);
+						}
+						else {
+							var max = buffer.readUInt16BE(0);
+							var bsize = buffer.readUInt16BE(2);
+							var q = new QueueFile(path,fd,max,bsize);
+							callback(null,q);
+							resolve(q);
+						}
+					});
+				}
 			});
 		});
 	}
