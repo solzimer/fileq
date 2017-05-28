@@ -3,9 +3,9 @@ const
 	mkdirp = require('mkdirp'),
 	EventEmitter = require('events'),
 	semaphore = require('semaphore'),
+	FileManager = require("./filemanager.js"),
 	QueueFile = require("./queuefile.js");
 
-const voidfn = ()=>{};
 const DEF_CONF =  {
 	path : "/tmp/fileq",
 	max : 100,
@@ -13,50 +13,6 @@ const DEF_CONF =  {
 };
 
 var map = {};
-
-class FileManager {
-	static initPath(path,size,callback) {
-		callback = callback || voidfn;
-		return new Promise((resolve,reject)=>{
-			mkdirp(path,err=>{
-				if(err) {
-					reject(err);
-					callback(err);
-				}
-				else {
-					resolve();
-					callback();
-				}
-			});
-		});
-	}
-
-	static listFiles(path, callback) {
-		callback = callback || voidfn;
-		return new Promise((resolve,reject)=>{
-			fs.readdir(path, (err,res)=>{
-				if(err) {
-					reject(err);
-					callback(err);
-				}
-				else {
-					res.sort((a,b)=>a<b?1:-1);
-					resolve(res);
-					callback(null,res);
-				}
-			});
-		});
-	}
-
-	static newFile(path, callback) {
-		callback = callback || voidfn;
-		return new Promise((resolve,reject)=>{
-			var d = Date.now();
-			resolve(path+"/"+d+".fbq");
-		});
-	}
-}
-
 
 class Queue extends EventEmitter {
 	constructor(path,options) {

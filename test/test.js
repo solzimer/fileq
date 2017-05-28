@@ -28,3 +28,4 @@ var read = function() {
 
 setTimeout(write,rnd(IWRITE));
 setTimeout(read,rnd(IREAD));
+setTimeout(read,rnd(IREAD));
