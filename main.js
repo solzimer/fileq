@@ -1,6 +1,5 @@
 const
 	fs = require("fs"),
-	mkdirp = require('mkdirp'),
 	EventEmitter = require('events'),
 	semaphore = require('semaphore'),
 	FileManager = require("./filemanager.js"),
