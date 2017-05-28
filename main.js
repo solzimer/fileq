@@ -12,6 +12,7 @@ const DEF_CONF =  {
 };
 
 var map = {};
+var cachemap = {}, cache = [];
 
 class Queue extends EventEmitter {
 	constructor(path,options) {
