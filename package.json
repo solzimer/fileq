@@ -1,6 +1,6 @@
 {
   "name": "fileq",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "File based FIFO queue",
   "author": "David Gómez Matarrodona <solzimer@gmail.com>",
   "url": "https://github.com/owner/project/issues",
@@ -19,7 +19,7 @@
     "mkdirp": "^0.5.1",
     "semaphore": "^1.0.5"
   },
-	"devDependencies": {
+  "devDependencies": {
     "commander": "*"
-  }	
+  }
 }
