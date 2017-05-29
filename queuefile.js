@@ -110,13 +110,14 @@ class QueueFile {
 		return new Promise((resolve,reject)=>{
 			var str = JSON.stringify(json);
 			var len = str.length;
-			var blocks = Math.ceil(len/this.bsize);
+			var b = Buffer.from(str);
+			var blocks = Math.ceil(b.length/this.bsize);
 
 			// Split data into blocks
 			var buffers = [];
 			for(var i=0;i<blocks;i++) {
 				var buff = Buffer.alloc(this.bsize+BPAD);
-				buff.write(str.substring(i*this.bsize,(i+1)*this.bsize))
+				b.copy(buff,0,i*this.bsize,(i+1)*this.bsize);
 				buff.writeUInt8(i<blocks-1?1:0,buff.length-1);
 				buffers.push(buff);
 			}
