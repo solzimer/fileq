@@ -1,7 +1,7 @@
 const Queue = require("../main.js");
 
 const IWRITE = 50;
-const IREAD = 200;
+const IREAD = 50;
 
 Queue.configure({max : 1000,bsize : 300});
 var queue = Queue.from();
@@ -28,5 +28,4 @@ var read = function() {
 }
 
 setTimeout(write,rnd(IWRITE));
-setTimeout(read,rnd(IREAD));
 setTimeout(read,rnd(IREAD));
