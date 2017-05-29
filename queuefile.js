@@ -38,7 +38,9 @@ class QueueFile {
 		}
 	}
 
-	_bread(buffer,callback) {
+	_bread(callback) {
+		var buffer = Buffer.allocUnsafe(this.bsize+1);
+
 		// Read block
 		fs.read(this.fd,buffer,0,buffer.length,this.rpos,(err,bytes)=>{
 			if(!bytes) callback(QueueFile.NO_DATA);
@@ -48,18 +50,20 @@ class QueueFile {
 				// Get content and "next" flag
 				var sidx = buffer.indexOf(0);
 				if(sidx<0) sidx = buffer.indexOf(1);
-				var str = buffer.toString("utf8",0,sidx);
 				var next = buffer.readUInt8(buffer.length-1);
+				var nbuff = Buffer.concat([buffer],sidx);
 				// If next, append content with the rest of the read
 				if(next) {
-					this._bread(buffer,(err,res)=>{
-						if(!err) callback(null,str+res);
-						else callback(err);
+					this._bread((err,res)=>{
+						if(!err)
+							callback(null,Buffer.concat([nbuff,res],nbuff.length+res.length));
+						else
+							callback(err);
 					});
 				}
 				// Return the content
 				else {
-					callback(null,str);
+					callback(null,nbuff);
 				}
 			}
 		});
@@ -91,12 +95,11 @@ class QueueFile {
 		callback = callback || voidfn;
 
 		var str = "", next = false;
-		var buffer = Buffer.alloc(this.bsize+BPAD);
 
 		return new Promise((resolve,reject)=>{
-			this._bread(buffer,(err,res)=>{
+			this._bread((err,res)=>{
 				this.rcount += err? 0 : 1;
-				if(res) res = JSON.parse(res.trim());
+				if(res) res = JSON.parse(res.toString().trim());
 				if(!err) resolve(res);
 				else reject(err);
 				callback(err,res);
