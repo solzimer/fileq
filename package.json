@@ -18,5 +18,8 @@
   "dependencies": {
     "mkdirp": "^0.5.1",
     "semaphore": "^1.0.5"
-  }
+  },
+	"devDependencies": {
+    "commander": "*"
+  }	
 }

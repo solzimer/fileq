@@ -1,13 +1,12 @@
-const Queue = require("../main.js");
+const
+	Queue = require("../main.js"),
+	program = require("commander");
 
 const IWRITE = 50;
 const IREAD = 50;
 
-Queue.configure({max : 1000,bsize : 300});
-var queue = Queue.from();
+var queue = Queue.from("./db/test");
 var i = 0;
-
-var rnd = function(n) {return Math.floor(Math.random()*n+1)}
 
 var write = function() {
 	var json = {
@@ -16,16 +15,21 @@ var write = function() {
 	}
 
 	queue.push(json,()=>{
-		setTimeout(write,rnd(IWRITE));
+		setTimeout(write,program.write || IWRITE);
 	});
 }
 
 var read = function() {
 	queue.peek((err,json)=>{
 		console.log("READ => ",err||json);
-		setTimeout(read,rnd(IREAD));
+		setTimeout(read,program.read || IREAD);
 	});
 }
 
-setTimeout(write,rnd(IWRITE));
-setTimeout(read,rnd(IREAD));
+program.version('0.0.1')
+	.option('-w, --write [ms]', 'Write millisecons interval',"parseInt")
+	.option('-r, --read [ms]', 'Read millisecons interval',"parseInt")
+	.parse(process.argv);
+
+setTimeout(write,program.write || IWRITE);
+setTimeout(read,program.read || IREAD);
