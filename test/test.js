@@ -5,12 +5,12 @@ const
 const IWRITE = 50;
 const IREAD = 50;
 
-var queue = Queue.from("./db/test");
+var queue = Queue.from("./db");
 var i = 0;
 
 var write = function() {
 	var json = {
-		message : "This is the entry number "+i+ " of the file",
+		message : "This is the entry number "+i+ " of the file. This is a test script to prove the fileq module.",
 		entry : i++
 	}
 
@@ -31,5 +31,5 @@ program.version('0.0.1')
 	.option('-r, --read [ms]', 'Read millisecons interval',"parseInt")
 	.parse(process.argv);
 
-setTimeout(write,program.write || IWRITE);
-setTimeout(read,program.read || IREAD);
+if(program.write>0) setTimeout(write,program.write || IWRITE);
+if(program.read>0) setTimeout(read,program.read || IREAD);

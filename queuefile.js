@@ -27,7 +27,7 @@ class QueueFile {
 				if(err) callback(err);
 				else {
 					// Write next block
-					this.wpos += this.bsize + 1;
+					this.wpos += buff.length;
 					this._bwrite(buffers,callback);
 				}
 			});
@@ -112,17 +112,15 @@ class QueueFile {
 			var len = str.length;
 			var b = Buffer.from(str);
 			var blocks = Math.ceil(b.length/this.bsize);
+			var buffer = Buffer.allocUnsafe(blocks*(this.bsize+1)).fill(0);
 
 			// Split data into blocks
-			var buffers = [];
 			for(var i=0;i<blocks;i++) {
-				var buff = Buffer.alloc(this.bsize+BPAD);
-				b.copy(buff,0,i*this.bsize,(i+1)*this.bsize);
-				buff.writeUInt8(i<blocks-1?1:0,buff.length-1);
-				buffers.push(buff);
+				b.copy(buffer,i*(this.bsize+1),i*this.bsize,(i+1)*this.bsize);
+				buffer.writeUInt8(i<blocks-1?1:0,(i+1)*this.bsize);
 			}
 
-			this._bwrite(buffers,(err,res)=>{
+			this._bwrite([buffer],(err,res)=>{
 				if(err) reject(err);
 				else resolve(res);
 				callback(err,res);
