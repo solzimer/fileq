@@ -1,12 +1,13 @@
 const
 	fs = require("fs"),
+	os = require("os"),
 	EventEmitter = require('events'),
 	semaphore = require('semaphore'),
 	FileManager = require("./filemanager.js"),
 	QueueFile = require("./queuefile.js");
 
 const DEF_CONF =  {
-	path : "/tmp/fileq",
+	path : os.tmpdir()+"/fileq",
 	max : 100,
 	bsize : 100,
 	csize : 100
@@ -22,14 +23,17 @@ class Queue extends EventEmitter {
 		super();
 
 		options = options || {};
-		this.path = path || DEF_CONF.path;
+		this.uid = "queue_"+Math.random();
+		this.path = path || options.path || DEF_CONF.path+"/"+this.uid;
 		this.files = [];
 		this.writer = null;
 		this.reader = null;
-		this.max = options.max || 100;
-		this.bsize = options.bsize || 100;
+		this.max = options.max || DEF_CONF.max;
+		this.bsize = options.bsize || DEF_CONF.bsize;
 		this.wsem = semaphore(1);
 		this.rsem = semaphore(1);
+
+		cache[this.uid] = {map:{},list:[]};
 
 		this.ready = FileManager.
 			initPath(this.path).
@@ -59,7 +63,7 @@ class Queue extends EventEmitter {
 	}
 
 	_cache(item) {
-		var c = cache["*"], map = c.map, list = c.list;
+		var c = cache[this.uid], map = c.map, list = c.list;
 		var qf = item? this.writer : this.reader;
 
 		if(item) {
@@ -120,7 +124,7 @@ class Queue extends EventEmitter {
 				var cdata = this._cache();
 
 				if(!cdata.err) {
-					callback(null,cdata);
+					callback(null,cdata.item);
 					return;
 				}
 
@@ -164,8 +168,21 @@ class Queue extends EventEmitter {
 }
 
 module.exports = {
-	from : function(path,options) {
-		map[path] = map[path] || new Queue(path,options);
-		return map[path];
+	from(path,options) {
+		if(!path) {
+			var queue = new Queue(null,options);
+			map[queue.path] = queue;
+			return queue;
+		}
+		else {
+			map[path] = map[path] || new Queue(path,options);
+			return map[path];
+		}
+	},
+	configure(options) {
+		options = options || {};
+
+		for(var i in options)
+			DEF_CONF[i] = options[i];
 	}
 };

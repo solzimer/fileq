@@ -46,7 +46,9 @@ class QueueFile {
 			else {
 				this.rpos += buffer.length;
 				// Get content and "next" flag
-				var str = buffer.toString("utf8",0,buffer.length-1);
+				var sidx = buffer.indexOf(0);
+				if(sidx<0) sidx = buffer.indexOf(1);
+				var str = buffer.toString("utf8",0,sidx);
 				var next = buffer.readUInt8(buffer.length-1);
 				// If next, append content with the rest of the read
 				if(next) {
@@ -94,7 +96,7 @@ class QueueFile {
 		return new Promise((resolve,reject)=>{
 			this._bread(buffer,(err,res)=>{
 				this.rcount += err? 0 : 1;
-				if(res) res = res.trim();
+				if(res) res = JSON.parse(res.trim());
 				if(!err) resolve(res);
 				else reject(err);
 				callback(err,res);

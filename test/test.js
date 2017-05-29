@@ -1,9 +1,10 @@
 const Queue = require("../main.js");
 
-const IWRITE = 100;
-const IREAD = 10;
+const IWRITE = 50;
+const IREAD = 200;
 
-var queue = Queue.from("./db",{max:10,bsize:100});
+Queue.configure({max : 1000,bsize : 300});
+var queue = Queue.from();
 var i = 0;
 
 var rnd = function(n) {return Math.floor(Math.random()*n+1)}
