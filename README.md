@@ -7,7 +7,8 @@ High-performance queue that stores JSON objects in a file-based FIFO, so the rea
 * Multiple writers and readers on the same queue
 * Can recover previous queue if process is restarted
 * In-memory direct access when reads are faster then writes
-* Fault tolerant, and fine tuning
+* Customizable memory cache size
+* Fault tolerant, and fine-tunning
 
 ## Installation
 ```
@@ -24,6 +25,7 @@ var i=0;
 
 setInterval(()=>{
 	queue.push({key:i, message:"This is the entry for "+i});
+	i++;
 },100);
 
 setInterval(()=>{
