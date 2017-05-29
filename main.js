@@ -6,6 +6,7 @@ const
 	FileManager = require("./filemanager.js"),
 	QueueFile = require("./queuefile.js");
 
+const voidfn = ()=>{};
 const DEF_CONF =  {
 	path : os.tmpdir()+"/fileq",
 	max : 100,
@@ -45,6 +46,8 @@ class Queue extends EventEmitter {
 	}
 
 	push(item, callback) {
+		callback = callback || voidfn;
+
 		this.wsem.take(()=>{
 			this._push(item,(err,res)=>{
 				callback(err,res);
@@ -54,6 +57,8 @@ class Queue extends EventEmitter {
 	}
 
 	peek(callback, timeout) {
+		callback = callback || voidfn;
+
 		this.rsem.take(()=>{
 			this._peek((err,res)=>{
 				callback(err,res);
