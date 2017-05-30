@@ -93,7 +93,6 @@ class QueueFile {
 	}
 
 	skip(n,i) {
-		debugger;
 		var bread = Buffer.allocUnsafe(1).fill(CODE.READ);
 		for(var j=0;j<n;j++) {
 			fs.write(this.fd,bread,0,1,this.rpos+(j+1)*(this.bsize+BPAD)-1,()=>{});

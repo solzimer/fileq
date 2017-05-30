@@ -85,7 +85,6 @@ class Queue extends EventEmitter {
 			}
 		}
 		else {
-			//return {err:"NO_CACHE"};
 			var k = qf.path+"_"+(qf.rcount+1);
 			if(map[k]) {
 				var data = map[k];
