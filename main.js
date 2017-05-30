@@ -60,8 +60,8 @@ class Queue extends EventEmitter {
 		callback = callback || voidfn;
 
 		this.rsem.take(()=>{
-			this._peek((err,res)=>{
-				callback(err,res);
+			this._peek((err,res,mem)=>{
+				callback(err,res,mem);
 				this.rsem.leave();
 			},timeout);
 		});
@@ -129,12 +129,12 @@ class Queue extends EventEmitter {
 				var cdata = this._cache();
 
 				if(!cdata.err) {
-					callback(null,cdata.item);
+					callback(null,cdata.item,true);
 					return;
 				}
 
 				queue.read().then(
-					data=>callback(null,data),
+					data=>callback(null,data,false),
 					err=>{
 						if(err==QueueFile.NO_DATA) {				// Read returns no data
 							if(this.files.length) {						// Exist other files, that
@@ -153,7 +153,7 @@ class Queue extends EventEmitter {
 								});
 							}
 						}
-						else callback(err,data);
+						else callback(err,data,false);
 					}
 				);
 			}

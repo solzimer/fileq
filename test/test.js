@@ -20,15 +20,17 @@ var write = function() {
 }
 
 var read = function() {
-	queue.peek((err,json)=>{
-		console.log("READ => ",err||json);
+	queue.peek((err,json,mem)=>{
+		json = err || JSON.stringify(json);
+		mem = mem? true : false;
+		console.log(`MEM: ${mem}, ENTRY: ${json}`);
 		setTimeout(read,program.read || IREAD);
 	});
 }
 
 program.version('0.0.1')
-	.option('-w, --write [ms]', 'Write millisecons interval',"parseInt")
-	.option('-r, --read [ms]', 'Read millisecons interval',"parseInt")
+	.option('-W, --write [ms]', 'Write millisecons interval',"parseInt")
+	.option('-R, --read [ms]', 'Read millisecons interval',"parseInt")
 	.parse(process.argv);
 
 if(program.write>0) setTimeout(write,program.write || IWRITE);

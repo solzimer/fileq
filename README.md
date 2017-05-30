@@ -47,10 +47,13 @@ restart.
 Sets default options that will be passed to every new created queue
 
 ### queue.push(json,callback)
-Pushes a JSON object to the queue.
+Pushes a JSON object to the queue. Callback takes the typical *err* and
+*result* arguments.
 
 ### queue.peek(callback)
-Retrieves a JSON object from the queue, in a FIFO manner.
+Retrieves a JSON object from the queue, in a FIFO manner. Callback takes the
+usual *err* and *result* arguments, and a third *cache* argument, set to
+*true* if the item has been retrieved from memory
 
 ## Options
 When creating a queue, data are stored in several files in a folder. This is
