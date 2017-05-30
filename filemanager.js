@@ -5,7 +5,7 @@ const
 const voidfn = ()=>{};
 
 class FileManager {
-	static initPath(path,size,callback) {
+	static initPath(path,truncate,callback) {
 		callback = callback || voidfn;
 		return new Promise((resolve,reject)=>{
 			mkdirp(path,err=>{
@@ -14,8 +14,17 @@ class FileManager {
 					callback(err);
 				}
 				else {
-					resolve();
-					callback();
+					if(truncate) {
+						FileManager.listFiles(path).then(list=>{
+							list.forEach(f=>fs.unlink(path+"/"+f,()=>{}));
+							resolve();
+							callback();
+						});
+					}
+					else {
+						resolve();
+						callback();
+					}
 				}
 			});
 		});

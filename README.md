@@ -6,6 +6,8 @@ High-performance queue that stores JSON objects in a file-based FIFO, so the rea
 ## Features
 * Multiple writers and readers on the same queue
 * Can recover previous queue if process is restarted
+* Recover queue position on process restart
+* Persitent or truncate modes on process restart
 * In-memory direct access when reads are faster then writes
 * Customizable memory cache size
 * Fault tolerant, and fine-tunning
@@ -66,6 +68,9 @@ disk access on writes, and an easy access to each object during reads.
 
 The *options* object allows us to *fine-tune* the queue files to better match
 the needs of our process:
+* **truncate** : If *true*, previous queue status is reset, and a new empty
+queue is created. If *false*, a previously created queue is recovered. By
+default is set to *false*.
 * **max** : Maximum number of objects that will be stored in each file of the
 queue. By default, *max* is 100.
 * **bsize** : Size of each block. A stringified JSON object will be split

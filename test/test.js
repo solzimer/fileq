@@ -5,7 +5,7 @@ const
 const IWRITE = 50;
 const IREAD = 50;
 
-var queue = Queue.from("./db");
+var queue = null;
 var i = 0;
 
 var write = function() {
@@ -31,7 +31,9 @@ var read = function() {
 program.version('0.0.1')
 	.option('-W, --write [ms]', 'Write millisecons interval',"parseInt")
 	.option('-R, --read [ms]', 'Read millisecons interval',"parseInt")
+	.option('-T, --truncate', 'Truncate queue')
 	.parse(process.argv);
 
+queue = Queue.from("./db",{truncate:program.truncate});
 if(program.write>0) setTimeout(write,program.write || IWRITE);
 if(program.read>0) setTimeout(read,program.read || IREAD);

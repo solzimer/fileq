@@ -11,7 +11,8 @@ const DEF_CONF =  {
 	path : os.tmpdir()+"/fileq",
 	max : 100,
 	bsize : 100,
-	csize : 100
+	csize : 100,
+	truncate : false,
 };
 
 var map = {};
@@ -24,6 +25,8 @@ class Queue extends EventEmitter {
 		super();
 
 		options = options || {};
+		var truncate = options.truncate===undefined? DEF_CONF.truncate : options.truncate;
+
 		this.uid = "queue_"+Math.random();
 		this.path = path || options.path || DEF_CONF.path+"/"+this.uid;
 		this.files = [];
@@ -37,7 +40,7 @@ class Queue extends EventEmitter {
 		cache[this.uid] = {map:{},list:[]};
 
 		this.ready = FileManager.
-			initPath(this.path).
+			initPath(this.path,truncate).
 			then(()=>FileManager.newFile(this.path)).
 			then(fname=>QueueFile.create(fname,this.max,this.bsize)).
 			then(queue=>this.writer=queue).
@@ -82,6 +85,7 @@ class Queue extends EventEmitter {
 			}
 		}
 		else {
+			//return {err:"NO_CACHE"};
 			var k = qf.path+"_"+(qf.rcount+1);
 			if(map[k]) {
 				var data = map[k];
@@ -174,6 +178,8 @@ class Queue extends EventEmitter {
 
 module.exports = {
 	from(path,options) {
+		options = options || DEF_CONF;
+
 		if(!path) {
 			var queue = new Queue(null,options);
 			map[queue.path] = queue;

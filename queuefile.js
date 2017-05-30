@@ -4,6 +4,7 @@ const voidfn = ()=>{};
 
 const HLEN = 6;	// max:uint16, wcurr:uint16
 const BPAD = 1;	// Next byte number
+const CODE = {EOL : 0, NEXT : 1, READ : 2}
 
 class QueueFile {
 	constructor(path,fd,max,bsize) {
@@ -40,20 +41,31 @@ class QueueFile {
 
 	_bread(callback) {
 		var buffer = Buffer.allocUnsafe(this.bsize+1);
+		var bread = Buffer.allocUnsafe(1).fill(CODE.READ);
 
 		// Read block
 		fs.read(this.fd,buffer,0,buffer.length,this.rpos,(err,bytes)=>{
 			if(!bytes) callback(QueueFile.NO_DATA);
 			else if(err) callback(err);
 			else {
-				this.rpos += buffer.length;
 				// Get content and "next" flag
 				var sidx = buffer.indexOf(0);
 				if(sidx<0) sidx = buffer.indexOf(1);
-				var next = buffer.readUInt8(buffer.length-1);
+				var code = buffer.readUInt8(buffer.length-1);
+
+				// Read block, ignore
+				if(code==CODE.READ) sidx=0;
 				var nbuff = Buffer.concat([buffer],sidx);
+
+				// Not previously read. Mark as a read block
+				if(code!=CODE.READ)
+					fs.write(this.fd,bread,0,1,this.rpos+this.bsize,()=>{});
+
+				// Move read pointer
+				this.rpos += buffer.length;
+
 				// If next, append content with the rest of the read
-				if(next) {
+				if(code!=CODE.EOL) {
 					this._bread((err,res)=>{
 						if(!err)
 							callback(null,Buffer.concat([nbuff,res],nbuff.length+res.length));
@@ -81,6 +93,12 @@ class QueueFile {
 	}
 
 	skip(n,i) {
+		debugger;
+		var bread = Buffer.allocUnsafe(1).fill(CODE.READ);
+		for(var j=0;j<n;j++) {
+			fs.write(this.fd,bread,0,1,this.rpos+(j+1)*(this.bsize+BPAD)-1,()=>{});
+		}
+
 		this.rpos += n*(this.bsize+BPAD);
 		this.rcount += i||1;
 	}
@@ -163,7 +181,7 @@ class QueueFile {
 	static open(path,callback)  {
 		callback = callback || voidfn;
 		return new Promise((resolve,reject)=>{
-			fs.open(path, "r", (err,fd)=>{
+			fs.open(path, "r+", (err,fd)=>{
 				if(err) {
 					callback(err);
 					reject(err);
