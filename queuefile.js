@@ -137,7 +137,7 @@ class QueueFile {
 			// Split data into blocks
 			for(var i=0;i<blocks;i++) {
 				b.copy(buffer,i*(this.bsize+1),i*this.bsize,(i+1)*this.bsize);
-				buffer.writeUInt8(i<blocks-1?1:0,(i+1)*this.bsize);
+				buffer.writeUInt8(i<blocks-1?1:0,i+(i+1)*this.bsize);
 			}
 
 			this._bwrite([buffer],(err,res)=>{
