@@ -16,7 +16,7 @@
     "FIFO"
   ],
   "dependencies": {
-    "mkdirp": "^0.5.1",
+    "fs-extra": "^6.0.0",
     "pouchdb": "^6.4.3",
     "semaphore": "^1.0.5"
   },
