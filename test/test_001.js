@@ -29,11 +29,11 @@ var read = function() {
 }
 
 program.version('0.0.1')
-	.option('-W, --write [ms]', 'Write millisecons interval',"parseInt")
-	.option('-R, --read [ms]', 'Read millisecons interval',"parseInt")
+	.option('-W, --write [ms]', 'Write millisecons interval',parseInt)
+	.option('-R, --read [ms]', 'Read millisecons interval',parseInt)
 	.option('-T, --truncate', 'Truncate queue')
 	.parse(process.argv);
 
 queue = new Queue("db");
-if(program.write>0) setTimeout(write,program.write || IWRITE);
-if(program.read>0) setTimeout(read,program.read || IREAD);
+setTimeout(write,program.write || IWRITE);
+setTimeout(read,program.read || IREAD);
