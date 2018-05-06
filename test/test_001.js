@@ -1,5 +1,5 @@
 const
-	Queue = require("../main.js"),
+	Queue = require("../lib/queue"),
 	program = require("commander");
 
 const IWRITE = 50;
@@ -34,6 +34,6 @@ program.version('0.0.1')
 	.option('-T, --truncate', 'Truncate queue')
 	.parse(process.argv);
 
-queue = Queue.from("./db",{truncate:program.truncate});
+queue = new Queue("db");
 if(program.write>0) setTimeout(write,program.write || IWRITE);
 if(program.read>0) setTimeout(read,program.read || IREAD);
