@@ -33,6 +33,6 @@ program.version('0.0.1')
 	.option('-T, --truncate', 'Truncate queue')
 	.parse(process.argv);
 
-queue = new Queue("db");
+queue = new Queue("db","./");
 setTimeout(write,program.write || IWRITE);
 setTimeout(read,program.read || IREAD);
