@@ -42,8 +42,7 @@ setInterval(()=>{
 Retrieve a queue stored in *path* folder. If the queue doesn't exist, it is
 created. The *options* parameter will be described later. If path is not
 specified, an *anonymous* queue will be created in the base path defined in
-the base options. Anonymous queues will not be persisted across a process
-restart.
+the base options.
 
 ### FileQueue.configure(options)
 Sets default options that will be passed to every new created queue
@@ -71,14 +70,5 @@ the needs of our process:
 * **truncate** : If *true*, previous queue status is reset, and a new empty
 queue is created. If *false*, a previously created queue is recovered. By
 default is set to *false*.
-* **max** : Maximum number of objects that will be stored in each file of the
-queue. By default, *max* is 100.
-* **bsize** : Size of each block. A stringified JSON object will be split
-in *bsize* blocks in order to be stored in file, so if this size is very small,
-recover the object will require more reads, and if **bsize** is too big, each
-queue file will have more size than desired. By default, *bsize* is 100.
-* **csize** : Size of the memory cache (in terms of number of objects). When
-reads are faster than writes, the process doesn't need to read the file to
-actually retrieve the objects from the queue.
 * **path** : Base folder to store *anonymous* queues when the path is not
 specified. By default, the base path is the os temporal folder.
