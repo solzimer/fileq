@@ -20,12 +20,11 @@ var write = function() {
 }
 
 var read = function() {
-	queue.peek((err,json,mem)=>{
+	queue.peek((err,json)=>{
 		json = err || JSON.stringify(json);
-		mem = mem? true : false;
-		console.log(`MEM: ${mem}, ENTRY: ${json}`);
+		console.log(`ERR: ${err}, ENTRY: ${json}`);
 		setTimeout(read,program.read || IREAD);
-	});
+	},100);
 }
 
 program.version('0.0.1')
