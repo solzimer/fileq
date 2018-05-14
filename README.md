@@ -66,7 +66,7 @@ Pushes a JSON object to the queue. Callback takes the typical *err* and
 Retrieves a JSON object from the queue, in a FIFO manner. Callback takes the
 usual *err* and *result* arguments. If no callback is provided, it returns a
 promise. The argument **time** specifies a wait for data timeout. If no data
-cold be read before **time**, then callback is called with "timeout" error
+could be read before **time**, then callback is called with "timeout" error
 (promise is rejected). The *commit* parameter specifies a transactional requirement.
 When *commit* is *true*, callback function receives a third argument (function *done*)
 that must be called in order to remove the item from the queue.
