@@ -6,12 +6,13 @@ const
 const REGISTRY = {}
 const DEF = {
 	truncate : false,
+	autocommit : true,
 	path : os.tmpdir()
 }
 
 class FileQueue {
 	constructor(name,options) {
-		this.queue = new Queue(name,options.path,options.truncate);
+		this.queue = new Queue(name,options);
 	}
 
 	static from(name,options) {
@@ -19,7 +20,7 @@ class FileQueue {
 
 		if(!REGISTRY[name]) {
 			options = options || {};
-			options.truncate = options.truncate || DEF.truncate;
+			options.truncate = options.truncate===true;
 			options.path = options.path || DEF.path;
 			REGISTRY[`${options.path}/${name}`] = new FileQueue(name,options);
 		}
@@ -36,8 +37,28 @@ class FileQueue {
 		return this.queue.push(data,callback);
 	}
 
-	peek(callback,time) {
-		return this.queue.peek(callback,time);
+	poll(callback,time) {
+		return this.queue.poll(callback,time);
+	}
+
+	head(callback,time) {
+		return this.queue.head(callback,time);
+	}
+
+	peek(callback,time,commit) {
+		return this.queue.peek(callback,time,commit);
+	}
+
+	get locked() {
+		return this.queue.locked;
+	}
+
+	lock(callback) {
+		return this.queue.lock(callback);
+	}
+
+	unlock() {
+		return this.queue.unlock();
 	}
 }
 
