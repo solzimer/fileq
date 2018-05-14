@@ -28,6 +28,14 @@ async function testPromise(queue) {
 		console.log(item);
 		queue.unlock();
 	}
+
+	queue.peek((err,item,done)=>{
+		console.log("LOCK reads for 5 secs");
+		setTimeout(done,5000);
+	},0,true);
+
+	let item = await queue.poll();
+	console.log("ITEM Unlocked",item);
 }
 
 async function testCallback(queue) {
