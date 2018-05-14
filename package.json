@@ -13,7 +13,12 @@
     "buffer",
     "json",
     "queue",
-    "FIFO"
+    "FIFO",
+		"peek",
+		"poll",
+		"transactional",
+		"transaction",
+		"commit"
   ],
   "dependencies": {
     "fs-extra": "^6.0.0",
