@@ -161,8 +161,14 @@ is called. Note that this is a soft lock (other readers can ignore the lock). Th
 ### queue.unlock()
 Unlocks queue reads
 
+### queue.close() => Promise
+Closes de queue
+
 ### queue.locked => Boolean
 Returns *true* if queue has a virtual lock; *false* otherwise.
+
+### queue.closed => Boolean
+Returns *true* if the queue has been closed
 
 ## Options
 When creating a queue, data are stored in several files in a folder.

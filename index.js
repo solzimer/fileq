@@ -60,6 +60,14 @@ class FileQueue {
 	unlock() {
 		return this.queue.unlock();
 	}
+
+	close() {
+		return this.queue.close();
+	}
+
+	get closed() {
+		return this.queue.closed;
+	}	
 }
 
 module.exports = FileQueue;
